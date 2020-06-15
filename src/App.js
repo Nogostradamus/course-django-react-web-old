@@ -1,78 +1,80 @@
-import React, { Component } from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import './App.css';
 import MovieList from './components/movie-list';
 import MovieDetails from './components/movie-details';
 import MovieForm from './components/movie-form';
-import { withCookies } from 'react-cookie';
+import { useFetch } from "./hooks/hooks";
+import {TokenContext} from "./context";
 var FontAwesome = require('react-fontawesome');
 
-class App extends Component {
+function App(props) {
 
-  state = {
-    movies: [],
-    selectedMovie: null,
-    editedMovie: null,
-    token: this.props.cookies.get('mr-token')
-  }
+  const { token, removeToken } = useContext(TokenContext);
+  const [ moviesAPI, loadingMovies, errorMovies] = useFetch("loadMovies");
+  const [ movies, setMovies ] = useState();
+  const [ selectedMovie, setSelectedMovie ] = useState(null)
+  const [ editedMovie, setEditedMovie ] = useState(null)
 
-  componentDidMount(){
-    if(this.state.token){
-      fetch('http://127.0.0.1:8000/api/movies/', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Token ${this.state.token}`
-        }
-      }).then( resp => resp.json())
-      .then( res => this.setState({movies: res}))
-      .catch( error => console.log(error))
-    } else {
+  useEffect(()=>{
+    if(!token){
       window.location.href = '/';
     }
-    
+  },[token])
+
+  useEffect(()=>{
+    setMovies(moviesAPI)
+  },[moviesAPI])
+
+  const logoutClicked = () => {
+    removeToken('mr-token');
+    window.location.href = '/';
   }
 
-  loadMovie = movie => {
-    this.setState({selectedMovie: movie, editedMovie: null});
+  const loadMovie = movie => {
+    setSelectedMovie(movie);
+    setEditedMovie(null);
   }
-  movieDeleted = selMovie => {
-    const movies = this.state.movies.filter( movie => movie.id !== selMovie.id);
-    this.setState({movies: movies, selectedMovie: null})
+  const movieDeleted = selMovie => {
+    const newMovies = movies.filter( movie => movie.id !== selMovie.id);
+    setMovies(newMovies);
+    setSelectedMovie(null);
   }
-  editClicked = selMovie => {
-    this.setState({editedMovie: selMovie});
+  const editClicked = selMovie => {
+    setEditedMovie(selMovie);
   }
-  newMovie = () => {
-    this.setState({editedMovie: {title: '', description: ''}});
+  const newMovie = () => {
+    setEditedMovie({title: '', description: ''});
   }
-  cancelForm = () => {
-    this.setState({editedMovie: null});
+  const cancelForm = () => {
+    setEditedMovie(null);
   }
-  addMovie = movie => {
-    this.setState({movies: [...this.state.movies, movie]});
+  const addMovie = movie => {
+    setMovies([...movies, movie]);
   }
 
-  
-  render(){
+  if(loadingMovies) return <h1>Loading...</h1>
+  if(errorMovies) return <h1>Error loading movies</h1>
+
     return (
       <div className="App">
           <h1>
             <FontAwesome name="film"/>
             <span>Movie Rater</span>
+            <button onClick={logoutClicked}>Logout</button>
           </h1>
           <div className="layout">
-            <MovieList movies={this.state.movies} movieClicked={this.loadMovie} token={this.state.token}
-              movieDeleted={this.movieDeleted} editClicked={this.editClicked} newMovie={this.newMovie}/>
+            <MovieList movies={movies} movieClicked={loadMovie} token={token}
+              movieDeleted={movieDeleted} editClicked={editClicked} newMovie={newMovie}/>
             <div>
-              { !this.state.editedMovie ?
-                <MovieDetails movie={this.state.selectedMovie} updateMovie={this.loadMovie}  token={this.state.token}/>
-               : <MovieForm movie={this.state.editedMovie} cancelForm={this.cancelForm} 
-               newMovie={this.addMovie} editedMovie={this.loadMovie} token={this.state.token}/> }
+              { !editedMovie ?
+                <MovieDetails movie={selectedMovie} updateMovie={loadMovie}  token={token}/>
+               : <MovieForm movie={editedMovie} cancelForm={cancelForm}
+               newMovie={addMovie} editedMovie={loadMovie} token={token}/> }
             </div>
             
           </div>
       </div>
     );
-  }
 }
 
-export default withCookies(App);
+export default App;

@@ -1,38 +1,3 @@
-.App {
-  text-align: center;
-  background-color: #282c34;
-  min-height: calc(100vh - 100px);
-  color: white;
-  margin: 0;
-  padding: 50px;
-}
-.layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  text-align: left;
-  grid-gap: 20px;
-}
-.orange {
-  color: orange;
-}
-.purple {
-  color: purple;
-}
-.rate-container {
-  border-top: 2px solid purple;
-}
-.rate-container span.fa {
-  font-size: 1.5em;
-  cursor: pointer;
-}
-.movie-item {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-}
-.movie-item span {
-  font-size: 1.2em;
-  margin: 16px 5px;
-}
 button {
   color: #444444;
   background-color: #f3f3f3;
